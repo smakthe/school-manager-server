@@ -9,7 +9,7 @@ class Api::V1::Admin::StudentsController < Api::V1::Admin::BaseController
     if params[:classroom_id].present?
       scope = scope.joins(:enrollments).where(enrollments: { classroom_id: params[:classroom_id] })
     end
-    @pagy, @students = pagy(scope)
+    @pagy, @students = pagy(scope, items: 100)
     render_jsonapi(StudentSerializer, @students, pagy: @pagy)
   end
 

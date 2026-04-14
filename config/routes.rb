@@ -16,6 +16,8 @@ Rails.application.routes.draw do
         resources :classrooms
         resources :academic_years
         resources :teacher_subject_assignments, only: [:index, :create, :destroy]
+        resources :marks, only: [:index]
+        get 'dashboard_stats', to: 'dashboard#stats'
       end
 
       namespace :principal do
