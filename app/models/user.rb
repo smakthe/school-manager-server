@@ -12,7 +12,7 @@ class User < ApplicationRecord
     return if email.blank? || userable.nil?
 
     if userable_type == 'Admin'
-      unless email == ENV['SUPER_ADMIN']
+      unless email == ENV['SUPERADMIN_EMAIL']
         errors.add(:email, 'must be the authorized superadmin email')
       end
     elsif userable_type == 'Teacher' || userable_type == 'Principal'

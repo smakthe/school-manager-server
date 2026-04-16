@@ -1,219 +1,271 @@
 require 'faker'
-require 'parallel'
 require 'ruby-progressbar'
 require 'bcrypt'
+require 'set'
+
+# Suppress SQL noise — without this, printing millions of queries freezes the terminal.
+ActiveRecord::Base.logger = nil
 
 puts "Cleaning Database..."
 [User, Mark, Enrollment, TeacherSubjectAssignment, Classroom, Subject, Student, Teacher, AcademicYear, School, Admin].each(&:delete_all)
 
-puts "Creating Superadmin (scmakra99@gmail.com)..."
+puts "Creating Superadmin..."
 Admin.create!
 User.create!(
   userable: Admin.first,
-  email: 'scmakra99@gmail.com',
-  password: '1234'
+  email:    ENV['SUPERADMIN_EMAIL']    || 'admin@school.com',
+  password: ENV['SUPERADMIN_PASSWORD'] || 'password'
 )
 
-# Precompute the hash to save massive amounts of CPU cycles globally across 45,000+ users!
 puts "Pre-computing BCrypt hashes for bulk insertion..."
 hashed_password = BCrypt::Password.create('1234', cost: 4).to_s
 
 TOTAL_SCHOOLS = 1000
-CLASS_GRADES = (1..10).to_a
-SECTIONS = [0, 1, 2] # 0=A, 1=B, 2=C
+CLASS_GRADES  = (1..10).to_a
+SECTIONS      = [0, 1, 2]   # 0=A, 1=B, 2=C
+TERMS         = [0, 1, 2]   # confirm matches your Term enum
+MAX_SCORE     = 100.0
+
 SUBJECTS_LIST = [
-  { code: 'MAT', name: 'Mathematics' },
-  { code: 'ENG',  name: 'English' },
-  { code: 'HIN', name: 'Hindi' },
-  { code: 'SST', name: 'Social Studies' },
-  { code: 'SAN', name: 'Sanskrit' },
-  { code: 'COM', name: 'Commerce' },
-  { code: 'ECO', name: 'Economics' },
-  { code: 'BST', name: 'Business Studies' },
-  { code: 'ACC', name: 'Accountancy' },
-  { code: 'HIS',  name: 'History' },
-  { code: 'GEO',  name: 'Geography' },
-  { code: 'PHY',  name: 'Physics' },
-  { code: 'CHE',  name: 'Chemistry' },
-  { code: 'BIO',  name: 'Biology' },
-  { code: 'BOT', name: 'Botany' },
-  { code: 'ZOO', name: 'Zoology' },
-  { code: 'CMP',  name: 'Computer Science' },
-  { code: 'CRA',  name: 'Craft' },
-  { code: 'POL',  name: 'Political Science' },
-  { code: 'PSY',  name: 'Psychology' },
-  { code: 'EVS',  name: 'Environmental Science' }
-]
+  { code: 'MAT', name: 'Mathematics' },       { code: 'ENG', name: 'English' },
+  { code: 'HIN', name: 'Hindi' },             { code: 'SST', name: 'Social Studies' },
+  { code: 'SAN', name: 'Sanskrit' },          { code: 'COM', name: 'Commerce' },
+  { code: 'ECO', name: 'Economics' },         { code: 'BST', name: 'Business Studies' },
+  { code: 'ACC', name: 'Accountancy' },       { code: 'HIS', name: 'History' },
+  { code: 'GEO', name: 'Geography' },         { code: 'PHY', name: 'Physics' },
+  { code: 'CHE', name: 'Chemistry' },         { code: 'BIO', name: 'Biology' },
+  { code: 'BOT', name: 'Botany' },            { code: 'ZOO', name: 'Zoology' },
+  { code: 'CMP', name: 'Computer Science' },  { code: 'CRA', name: 'Craft' },
+  { code: 'POL', name: 'Political Science' }, { code: 'PSY', name: 'Psychology' },
+  { code: 'EVS', name: 'Environmental Science' }
+].freeze
 
-puts "Spawning Fast Seed Threads. Dual-core max-throttle activated."
+@used_subdomains = Set.new
 
-# Ruby-progressbar is thread safe and will accurately represent progression.
-progressbar = ProgressBar.create(title: "Schools", total: TOTAL_SCHOOLS, format: '%t: |%B| %p%% %e')
+def generate_unique_school
+  name = subdomain = ""
+  attempts = 0
+  
+  loop do
+    pattern = rand(1..4)
+    name = case pattern
+           when 1 then "#{Faker::Address.city} #{%w[International Global Royal Modern].sample} Academy"
+           when 2 then "#{Faker::Name.last_name} #{%w[Memorial Heritage Pioneer].sample} Institute"
+           when 3 then "#{Faker::Space.star} #{%w[Valley Summit Horizon Heights].sample} School"
+           when 4 then "The #{Faker::Address.state} School of Excellence"
+           end
 
-Parallel.each(1..TOTAL_SCHOOLS, in_threads: 2) do |school_index|
-  ActiveRecord::Base.connection_pool.with_connection do
-    
-    # 1. GENERATE SCHOOL
-    school_name = Faker::University.name + " " + SecureRandom.hex(2)
-    subdomain = school_name.parameterize.gsub('-', '')[0..15] + SecureRandom.hex(2)
-    school = School.create!(
-      name: school_name,
-      subdomain: subdomain,
-      board: rand(0..2),
-      subscription_status: 1
-    )
-    domain = "#{school.subdomain}.co.edu"
+    # Fallback: If Faker happens to generate the exact same name multiple times,
+    # append a clean, realistic identifier instead of a random hex code.
+    name = "#{name} (Campus #{attempts})" if attempts > 5
 
-    # 2. GENERATE ACADEMIC YEAR
-    academic_year = AcademicYear.create!(
-      school_id: school.id,
-      name: "2026-2027",
-      start_date: Date.new(2026, 4, 1),
-      end_date: Date.new(2027, 3, 31),
-      is_current: true
-    )
+    # Increased from 15 to 35 characters. This prevents subdomain collisions 
+    # for cities with long names while keeping URLs clean.
+    subdomain = name.parameterize.gsub('-', '')[0..35]
 
-    # 3. GENERATE SUBJECTS (per grade level)
-    school_subjects = []
-    CLASS_GRADES.each do |grade|
-      SUBJECTS_LIST.each do |subj|
-        school_subjects << Subject.create!(school_id: school.id, code: subj[:code], name: subj[:name], grade: grade)
-      end
+    unless @used_subdomains.include?(subdomain)
+      @used_subdomains.add(subdomain)
+      break
     end
-
-    # 4. GENERATE STAFF 
-    users_to_insert = []
     
-    # --> Principal
-    principal = Principal.create!(
-      school_id: school.id,
-      name: Faker::Name.name,
-      employee_code: "PR-#{school.id}-1",
-      doj: Faker::Date.backward(days: 3650),
-      salary: 100000.0,
-      is_active: true
-    )
-    users_to_insert << {
-      userable_type: 'Teacher',
-      userable_id: principal.id,
-      email: "#{Faker::Internet.username(specifier: principal.name, separators: %w(.))}#{principal.id}@#{domain}",
+    attempts += 1
+  end
+  
+  [name, subdomain]
+end
+
+puts "Starting Strict Sequential Bulk Insert. No threads, no deadlocks."
+progressbar = ProgressBar.create(
+  title:  "Schools",
+  total:  TOTAL_SCHOOLS,
+  format: '%t: |%B| %p%% %e'
+)
+
+# TRUE SEQUENTIAL LOOP - No Parallel block
+1.upto(TOTAL_SCHOOLS) do |_school_index|
+  now = Time.now.utc
+
+  # ─── 1. SCHOOL & ACADEMIC YEAR ────────────────────────────────────────────
+  school_name, subdomain = generate_unique_school
+  
+  school = School.create!(
+    name:                school_name,
+    subdomain:           subdomain,
+    board:               rand(0..2),
+    subscription_status: 1,
+    address:             Faker::Address.full_address,
+    phone:               Faker::PhoneNumber.phone_number,
+    timezone:            "Asia/Kolkata"
+  )
+  domain = "#{school.subdomain}.edu.co"
+
+  academic_year = AcademicYear.create!(
+    school_id:  school.id,
+    name:       "2026-2027",
+    start_date: Date.new(2026, 4, 1),
+    end_date:   Date.new(2027, 3, 31),
+    is_current: true
+  )
+
+  # ─── 2. SUBJECTS ──────────────────────────────────────────────────────────
+  subjects_batch = CLASS_GRADES.flat_map do |grade|
+    SUBJECTS_LIST.map do |subj|
+      { school_id: school.id, code: subj[:code], name: subj[:name], grade: grade, created_at: now, updated_at: now }
+    end
+  end
+  Subject.insert_all!(subjects_batch)
+  subjects_by_grade = Subject.where(school_id: school.id).to_a.group_by(&:grade)
+
+  # ─── 3. STAFF ─────────────────────────────────────────────────────────────
+  principal = Principal.create!(
+    school_id:     school.id,
+    name:          Faker::Name.name,
+    employee_code: "PR-#{school.id}-1",
+    doj:           Faker::Date.backward(days: 3650),
+    salary:        100_000.0,
+    is_active:     true
+  )
+
+  teachers_batch = []
+  30.times { |i| teachers_batch << { school_id: school.id, name: Faker::Name.name, employee_code: "TCH-#{school.id}-C#{i}", doj: Faker::Date.backward(days: 1000), salary: 50_000.0, is_active: true, type: 'Teacher', created_at: now, updated_at: now } }
+  15.times { |i| teachers_batch << { school_id: school.id, name: Faker::Name.name, employee_code: "TCH-#{school.id}-E#{i}", doj: Faker::Date.backward(days: 1000), salary: 40_000.0, is_active: true, type: 'Teacher', created_at: now, updated_at: now } }
+  Teacher.insert_all!(teachers_batch)
+
+  all_teachers   = Teacher.where(school_id: school.id, type: 'Teacher').to_a
+  class_teachers = all_teachers.select { |t| t.employee_code.start_with?("TCH-#{school.id}-C") }
+  extra_teachers = all_teachers.select { |t| t.employee_code.start_with?("TCH-#{school.id}-E") }
+
+  # ─── 4. USERS ─────────────────────────────────────────────────────────────
+  users_batch = [{
+    userable_type:   'Principal',
+    userable_id:     principal.id,
+    email:           "principal@#{domain}",
+    password_digest: hashed_password,
+    created_at:      now,
+    updated_at:      now
+  }]
+  
+  all_teachers.each do |t|
+    users_batch << {
+      userable_type:   'Teacher',
+      userable_id:     t.id,
+      email:           "#{t.employee_code.downcase}@#{domain}",
       password_digest: hashed_password,
-      created_at: Time.now.utc,
-      updated_at: Time.now.utc
+      created_at:      now,
+      updated_at:      now
     }
-    
-    # --> Exactly 30 Class Teachers
-    class_teachers = []
-    30.times do |i|
-      class_teachers << Teacher.create!(
-        school_id: school.id,
-        name: Faker::Name.name,
-        employee_code: "TCH-#{school.id}-C#{i}",
-        doj: Faker::Date.backward(days: 1000),
-        salary: 50000.0,
-        is_active: true
-      )
-    end
-    
-    # --> Extra Teachers (10 to 20 floating subject teachers)
-    extra_teachers = []
-    rand(9..19).times do |i|
-      extra_teachers << Teacher.create!(
-        school_id: school.id,
-        name: Faker::Name.name,
-        employee_code: "TCH-#{school.id}-E#{i}",
-        doj: Faker::Date.backward(days: 1000),
-        salary: 40000.0,
-        is_active: true
-      )
-    end
-    
-    # Bind User hashes for all 40-50 regular teachers
-    (class_teachers + extra_teachers).each do |t|
-      users_to_insert << {
-        userable_type: 'Teacher',
-        userable_id: t.id,
-        email: "#{Faker::Internet.username(specifier: t.name, separators: %w(.))}#{t.id}@#{domain}",
-        password_digest: hashed_password,
-        created_at: Time.now.utc,
-        updated_at: Time.now.utc
+  end
+  User.insert_all!(users_batch)
+
+  # ─── 5. CLASSROOMS ────────────────────────────────────────────────────────
+  classrooms_batch = []
+  CLASS_GRADES.each_with_index do |grade, g_idx|
+    SECTIONS.each_with_index do |sec, s_idx|
+      t_idx = (g_idx * SECTIONS.size) + s_idx
+      classrooms_batch << {
+        school_id:        school.id,
+        academic_year_id: academic_year.id,
+        class_teacher_id: class_teachers[t_idx].id,
+        grade:            grade,
+        section:          sec,
+        created_at:       now,
+        updated_at:       now
       }
     end
+  end
+  Classroom.insert_all!(classrooms_batch)
+  classrooms = Classroom.where(school_id: school.id).to_a
 
-    # Bulk insert all user credentials bypassing 45,000 slow ActiveRecord triggers
-    User.insert_all!(users_to_insert)
+  # ─── 6. STUDENTS ──────────────────────────────────────────────────────────
+  students_batch = []
+  classrooms.each do |classroom|
+    age = classroom.grade + 5
+    rand(25..35).times do |s_idx|
+      students_batch << {
+        school_id:        school.id,
+        name:             Faker::Name.name,
+        admission_number: "ADM-#{school.id}-#{classroom.id}-#{s_idx}",
+        dob:              Faker::Date.birthday(min_age: age - 1, max_age: age + 1),
+        gender:           rand(0..2),
+        created_at:       now,
+        updated_at:       now
+      }
+    end
+  end
+  Student.insert_all!(students_batch)
 
+  admission_numbers = students_batch.map { |s| s[:admission_number] }
+  inserted_students = Student.where(admission_number: admission_numbers)
+                             .select(:id, :admission_number)
+                             .to_a
 
-    # 5. GENERATE CLASSROOMS, STUDENTS, AND ASSIGNMENTS
-    classroom_count = 0
+  # ─── 7. ENROLLMENTS ───────────────────────────────────────────────────────
+  enrollments_batch = inserted_students.map do |student|
+    classroom_id = student.admission_number.split('-')[2].to_i
+    {
+      student_id:       student.id,
+      classroom_id:     classroom_id,
+      academic_year_id: academic_year.id,
+      status:           0,
+      created_at:       now,
+      updated_at:       now
+    }
+  end
+  Enrollment.insert_all!(enrollments_batch)
 
-    CLASS_GRADES.each do |grade|
-      SECTIONS.each do |sec|
-        assigned_teacher = class_teachers[classroom_count]
-        classroom = Classroom.create!(
-          school_id: school.id,
-          academic_year_id: academic_year.id,
-          class_teacher_id: assigned_teacher.id,
-          grade: grade,
-          section: sec
-        )
-        classroom_count += 1
+  inserted_enrollments = Enrollment
+    .where(academic_year_id: academic_year.id, classroom_id: classrooms.map(&:id))
+    .select(:id, :classroom_id)
+    .to_a
+    .group_by(&:classroom_id)
 
-        # --> Students Bulk Data Prep (30 to 50 per class)
-        num_students = rand(30..50)
-        chunked_students = []
-        
-        num_students.times do |s_idx|
-          chunked_students << {
-            school_id: school.id,
-            name: Faker::Name.name,
-            admission_number: "ADM-#{school.id}-#{classroom.id}-#{s_idx}-#{SecureRandom.hex(2)}",
-            dob: Faker::Date.birthday(min_age: 5, max_age: 18),
-            gender: rand(0..2),
-            created_at: Time.now.utc,
-            updated_at: Time.now.utc
+  # ─── 8. TEACHER SUBJECT ASSIGNMENTS ──────────────────────────────────────
+  tsa_batch = []
+  classrooms.each do |classroom|
+    grade_subjects = subjects_by_grade[classroom.grade] || []
+    shuffled_extras = extra_teachers.shuffle
+
+    grade_subjects.each_with_index do |subj, idx|
+      tsa_batch << {
+        teacher_id:       shuffled_extras[idx % shuffled_extras.length].id,
+        classroom_id:     classroom.id,
+        subject_id:       subj.id,
+        academic_year_id: academic_year.id,
+        created_at:       now,
+        updated_at:       now
+      }
+    end
+  end
+  TeacherSubjectAssignment.insert_all!(tsa_batch)
+
+  # ─── 9. MARKS ─────────────────────────────────────────────────────────────
+  marks_batch = []
+  classrooms.each do |classroom|
+    grade_subjects       = subjects_by_grade[classroom.grade] || []
+    enrollments_in_class = inserted_enrollments[classroom.id] || []
+
+    enrollments_in_class.each do |enrollment|
+      grade_subjects.each do |subj|
+        TERMS.each do |term|
+          marks_batch << {
+            enrollment_id: enrollment.id,
+            subject_id:    subj.id,
+            term:          term,
+            score:         rand(0.0..MAX_SCORE).round(2),
+            max_score:     MAX_SCORE,
+            created_at:    now,
+            updated_at:    now
           }
         end
-        Student.insert_all!(chunked_students)
-        
-        # --> We pull the exactly generated students back for mapping their enrollment
-        student_records = Student.where(school_id: school.id).order(id: :desc).limit(num_students).pluck(:id)
-        
-        enrollments = student_records.map do |sid|
-          {
-            student_id: sid,
-            classroom_id: classroom.id,
-            academic_year_id: academic_year.id,
-            status: 0,
-            created_at: Time.now.utc,
-            updated_at: Time.now.utc
-          }
-        end
-        Enrollment.insert_all!(enrollments)
-
-        # --> Teacher Subject Assignments dynamically distributed to non-homeroom floaters!
-        # Grab exactly 3 distinct extra teachers to fill out assignment logic.
-        sampled_teachers = extra_teachers.sample(3)
-        available_subjects = school_subjects.select { |s| s.grade == grade }
-        
-        if available_subjects.any?
-          sampled_teachers.each_with_index do |t, idx|
-            subj = available_subjects[idx % available_subjects.length]
-            TeacherSubjectAssignment.create!(
-              teacher_id: t.id,
-              classroom_id: classroom.id,
-              subject_id: subj.id,
-              academic_year_id: academic_year.id
-            )
-          end
-        end
-
       end
     end
-
   end
-  # Thread finishes chunk process
+
+  # Chunked to stay under MySQL's max_allowed_packet limit.
+  marks_batch.each_slice(10_000) { |chunk| Mark.insert_all!(chunk) }
+
+  # Safely increment the progress bar directly
   progressbar.increment
 end
 
-puts "All Seed scripts generated seamlessly!"
+puts "\nAll Seed scripts completed successfully!"
