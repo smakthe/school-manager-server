@@ -27,16 +27,25 @@ TERMS         = [0, 1, 2]   # confirm matches your Term enum
 MAX_SCORE     = 100.0
 
 SUBJECTS_LIST = [
-  { code: 'MAT', name: 'Mathematics' },       { code: 'ENG', name: 'English' },
-  { code: 'HIN', name: 'Hindi' },             { code: 'SST', name: 'Social Studies' },
-  { code: 'SAN', name: 'Sanskrit' },          { code: 'COM', name: 'Commerce' },
-  { code: 'ECO', name: 'Economics' },         { code: 'BST', name: 'Business Studies' },
-  { code: 'ACC', name: 'Accountancy' },       { code: 'HIS', name: 'History' },
-  { code: 'GEO', name: 'Geography' },         { code: 'PHY', name: 'Physics' },
-  { code: 'CHE', name: 'Chemistry' },         { code: 'BIO', name: 'Biology' },
-  { code: 'BOT', name: 'Botany' },            { code: 'ZOO', name: 'Zoology' },
-  { code: 'CMP', name: 'Computer Science' },  { code: 'CRA', name: 'Craft' },
-  { code: 'POL', name: 'Political Science' }, { code: 'PSY', name: 'Psychology' },
+  { code: 'MAT', name: 'Mathematics' },       
+  { code: 'ENG', name: 'English' },
+  { code: 'HIN', name: 'Hindi' },             
+  { code: 'SST', name: 'Social Studies' },
+  { code: 'SAN', name: 'Sanskrit' },          
+  { code: 'COM', name: 'Commerce' },
+  { code: 'ECO', name: 'Economics' },         
+  { code: 'BST', name: 'Business Studies' },
+  { code: 'ACC', name: 'Accountancy' },       
+  { code: 'HIS', name: 'History' },
+  { code: 'GEO', name: 'Geography' },         
+  { code: 'PHY', name: 'Physics' },
+  { code: 'CHE', name: 'Chemistry' },         
+  { code: 'BIO', name: 'Biology' },
+  { code: 'BOT', name: 'Botany' },            
+  { code: 'ZOO', name: 'Zoology' },
+  { code: 'CMP', name: 'Computer Science' },
+  { code: 'POL', name: 'Political Science' }, 
+  { code: 'PSY', name: 'Psychology' },
   { code: 'EVS', name: 'Environmental Science' }
 ].freeze
 
@@ -47,17 +56,21 @@ def generate_unique_school
   attempts = 0
   
   loop do
-    pattern = rand(1..4)
+    pattern = rand(1..12)
     name = case pattern
            when 1 then "#{Faker::Address.city} #{%w[International Global Royal Modern].sample} Academy"
            when 2 then "#{Faker::Name.last_name} #{%w[Memorial Heritage Pioneer].sample} Institute"
            when 3 then "#{Faker::Space.star} #{%w[Valley Summit Horizon Heights].sample} School"
            when 4 then "The #{Faker::Address.state} School of Excellence"
+           when 5 then "#{Faker::Address.city} #{%w[Public Private Central State].sample} School"
+           when 6 then "#{Faker::Educator.campus} #{%w[High Prep Grammar Secondary].sample} School"
+           when 7 then "#{Faker::Name.last_name} #{%w[Montessori Endowed Technical Foundation].sample} Academy"
+           when 8 then "#{Faker::Address.community} #{%w[Collegiate Charter Magnet Arts].sample} Institute"
+           when 9 then "#{Faker::University.name}"
+           when 10 then "#{%w[St. Saint Mount Fort].sample} #{Faker::Name.first_name} #{%w[College High Academy].sample}"
+           when 11 then "#{Faker::Address.city} #{%w[Day Boarding Trade].sample} School"
+           when 12 then "#{%w[Little Bright Future Rising].sample} #{%w[Stars Minds Scholars Leaders].sample} #{%w[Academy School Institute].sample}"
            end
-
-    # Fallback: If Faker happens to generate the exact same name multiple times,
-    # append a clean, realistic identifier instead of a random hex code.
-    name = "#{name} (Campus #{attempts})" if attempts > 5
 
     # Increased from 15 to 35 characters. This prevents subdomain collisions 
     # for cities with long names while keeping URLs clean.
@@ -76,7 +89,7 @@ end
 
 puts "Starting Strict Sequential Bulk Insert. No threads, no deadlocks."
 progressbar = ProgressBar.create(
-  title:  "Schools",
+  title:  "Overall Progress",
   total:  TOTAL_SCHOOLS,
   format: '%t: |%B| %p%% %e'
 )
@@ -268,4 +281,4 @@ progressbar = ProgressBar.create(
   progressbar.increment
 end
 
-puts "\nAll Seed scripts completed successfully!"
+puts "\nSeeding completed successfully!"
