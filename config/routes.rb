@@ -24,12 +24,17 @@ Rails.application.routes.draw do
         resources :teachers
         resources :students
         resources :classrooms
+        resources :marks, only: [:index]
+        resources :teacher_subject_assignments, only: [:index]
+        get 'dashboard_stats', to: 'dashboard#stats'
       end
 
       namespace :teacher do
         resources :classrooms, only: [:index, :show]
         resources :students, only: [:index, :show, :update]
         resources :marks, only: [:index, :create, :update]
+        resources :teacher_subject_assignments, only: [:index]
+        get 'dashboard_stats', to: 'dashboard#stats'
       end
     end
   end

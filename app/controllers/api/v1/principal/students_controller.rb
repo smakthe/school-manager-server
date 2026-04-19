@@ -2,7 +2,11 @@ class Api::V1::Principal::StudentsController < Api::V1::Principal::BaseControlle
   before_action :set_student, only: [:show, :update, :destroy]
 
   def index
-    @pagy, @students = pagy(current_school.students)
+    scope = current_school.students
+    if params[:classroom_id].present?
+      scope = scope.joins(:enrollments).where(enrollments: { classroom_id: params[:classroom_id] })
+    end
+    @pagy, @students = pagy(scope)
     render_jsonapi(StudentSerializer, @students, pagy: @pagy)
   end
 

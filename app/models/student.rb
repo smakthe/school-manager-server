@@ -25,4 +25,8 @@ class Student < ApplicationRecord
   def current_class_display
     current_classroom&.display_name
   end
+
+  def is_active
+    current_enrollment&.active? || false
+  end
 end

@@ -13,7 +13,9 @@ class Api::V1::AuthenticationsController < ApplicationController
           id: user.id,
           email: user.email,
           role: user.userable_type.downcase,
-          userable_id: user.userable_id
+          userable_id: user.userable_id,
+          name: user.userable.try(:name),
+          school_name: user.userable.try(:school).try(:name)
         }
       }, status: :ok
     else
