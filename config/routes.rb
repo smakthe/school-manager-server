@@ -10,7 +10,11 @@ Rails.application.routes.draw do
       post 'login', to: 'authentications#create'
 
       namespace :admin do
-        resources :schools
+        resources :schools do
+          collection do
+            get :board_stats
+          end
+        end
         resources :teachers
         resources :students
         resources :classrooms

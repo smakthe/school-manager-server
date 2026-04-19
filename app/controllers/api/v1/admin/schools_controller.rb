@@ -2,8 +2,32 @@ class Api::V1::Admin::SchoolsController < Api::V1::Admin::BaseController
   before_action :set_school, only: [:show, :update, :destroy]
 
   def index
-    @pagy, @schools = pagy(School.all)
+    scope = School.all
+    if params[:board].present?
+      requested_boards = params[:board].split(',')
+      valid_boards = requested_boards.select { |b| School.boards.keys.include?(b) }
+      
+      if valid_boards.any?
+        scope = scope.where(board: valid_boards)
+      else
+        scope = scope.none
+      end
+    end
+    @pagy, @schools = pagy(scope)
     render_jsonapi(SchoolSerializer, @schools, pagy: @pagy)
+  end
+
+  def board_stats
+    stats = {}
+    School.boards.keys.each do |board|
+      schools_ids = School.where(board: board).select(:id)
+      stats[board] = {
+        schools: schools_ids.count,
+        teachers: Teacher.where(school_id: schools_ids).count,
+        students: Student.where(school_id: schools_ids).count
+      }
+    end
+    render json: stats
   end
 
   def show
