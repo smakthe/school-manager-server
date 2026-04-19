@@ -2,25 +2,32 @@ class Api::V1::Teacher::MarksController < Api::V1::Teacher::BaseController
   before_action :set_mark, only: [:update]
 
   def index
-    unless params[:classroom_id].present? && params[:subject_id].present?
-      return render json: { error: 'classroom_id and subject_id parameters are required' }, status: :bad_request
+    unless params[:student_id].present?
+      return render json: { error: 'student_id parameter is required' }, status: :bad_request
     end
 
-    assignment = current_userable.teacher_subject_assignments.find_by(
-      classroom_id: params[:classroom_id],
-      subject_id: params[:subject_id]
-    )
-
-    unless assignment
-      return render json: { error: 'You are not assigned to teach this subject for this classroom' }, status: :forbidden
+    student = current_school.students.find_by(id: params[:student_id])
+    unless student
+      return render json: { error: 'Student not found' }, status: :not_found
     end
 
-    marks = Mark.joins(:enrollment).where(
-      enrollments: { classroom_id: params[:classroom_id] }, 
-      subject_id: params[:subject_id]
-    )
-    
-    @pagy, @marks = pagy(marks)
+    enrolled_classroom_ids = Enrollment.where(student_id: student.id)
+                                      .pluck(:classroom_id)
+
+    teaches_in_classroom = current_userable.teacher_subject_assignments
+                                            .where(classroom_id: enrolled_classroom_ids)
+                                            .exists?
+
+    is_class_teacher = Classroom.where(class_teacher_id: current_userable.id)
+                                .where(id: enrolled_classroom_ids)
+                                .exists?
+
+    unless teaches_in_classroom || is_class_teacher
+      return render json: { error: 'Forbidden: student is not in any of your classrooms' }, status: :forbidden
+    end
+
+    scope = Mark.joins(:enrollment).where(enrollments: { student_id: student.id })
+    @pagy, @marks = pagy(scope)
     render_jsonapi(MarkSerializer, @marks, pagy: @pagy)
   end
 
