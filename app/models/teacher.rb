@@ -1,4 +1,9 @@
 class Teacher < ApplicationRecord
+  include Elasticsearch::Model
+  include Elasticsearch::Model::Callbacks
+
+  index_name "school_manager_teachers_#{Rails.env}"
+
   include Schoolable
 
   has_many :teacher_subject_assignments, dependent: :destroy
@@ -24,5 +29,15 @@ class Teacher < ApplicationRecord
   # Returns "IV-C", "IX-A" etc. for the teacher's current homeroom
   def homeroom_display
     homeroom&.display_name
+  end
+
+  def as_indexed_json(options = {})
+    as_json(
+      only: [:id, :name, :employee_code, :type, :school_id]
+    ).merge(
+      school_name: school.name,
+      email: user&.email,
+      document_type: type.downcase # 'teacher' or 'principal'
+    )
   end
 end

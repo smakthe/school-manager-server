@@ -1,4 +1,9 @@
 class Classroom < ApplicationRecord
+  include Elasticsearch::Model
+  include Elasticsearch::Model::Callbacks
+
+  index_name "school_manager_classrooms_#{Rails.env}"
+
   include Schoolable
   belongs_to :academic_year
   belongs_to :class_teacher, class_name: "Teacher", foreign_key: :class_teacher_id, inverse_of: :homeroom
@@ -29,6 +34,17 @@ class Classroom < ApplicationRecord
   # Returns "IV-C", "IX-A", "VIII-B" etc.
   def display_name
     "#{grade_in_roman}-#{section.upcase}"
+  end
+
+  def as_indexed_json(options = {})
+    as_json(
+      only: [:id, :grade, :section, :school_id, :academic_year_id]
+    ).merge(
+      school_name: school.name,
+      display_name: display_name,
+      class_teacher_name: class_teacher&.name,
+      document_type: 'classroom'
+    )
   end
 
   def grade_in_roman

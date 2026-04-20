@@ -40,6 +40,10 @@ gem "pagy", "~> 8.0"
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
 gem "rack-cors"
 
+# Search capabilities
+gem "elasticsearch-model"
+gem "elasticsearch-rails"
+
 group :development, :test do
   gem "dotenv-rails"
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem

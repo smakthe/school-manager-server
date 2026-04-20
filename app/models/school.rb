@@ -1,4 +1,8 @@
 class School < ApplicationRecord
+  include Elasticsearch::Model
+  include Elasticsearch::Model::Callbacks
+
+  index_name "school_manager_schools_#{Rails.env}"
   has_many :academic_years, dependent: :destroy
   has_many :classrooms, dependent: :destroy
   has_many :teachers, dependent: :destroy
@@ -18,6 +22,18 @@ class School < ApplicationRecord
     suspended: 2,
     cancelled: 3
   }
+
+  def full_address
+    [address_line_1, address_line_2, city, state, zip_code].compact_blank.join(", ")
+  end
+
+  def as_indexed_json(options = {})
+    as_json(
+      only: [:id, :name, :subdomain, :board, :principal_name, :city, :state, :phone, :email]
+    ).merge(
+      document_type: 'school'
+    )
+  end
 
   validates :name, presence: true
   validates :subdomain, presence: true, uniqueness: true

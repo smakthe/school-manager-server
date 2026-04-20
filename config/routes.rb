@@ -8,6 +8,7 @@ Rails.application.routes.draw do
   namespace :api, defaults: { format: :json } do
     namespace :v1 do
       post 'login', to: 'authentications#create'
+      get 'search', to: 'search#index'
 
       namespace :admin do
         resources :schools do
