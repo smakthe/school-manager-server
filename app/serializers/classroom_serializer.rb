@@ -1,6 +1,10 @@
 class ClassroomSerializer
   include JSONAPI::Serializer
   attributes :school_id, :academic_year_id, :class_teacher_id, :grade, :section, :display_name
+  
+  attribute :school_name do |object|
+    object.school&.name
+  end
 
   # Calculate the total number of students enrolled in this classroom
   attribute :students_count do |object|
