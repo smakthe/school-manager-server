@@ -58,8 +58,8 @@ production:
   primary: &primary_production
     <<: *default
     database: school_manager_production
-    username: school_manager
-    password: <%= ENV["SCHOOL_MANAGER_DATABASE_PASSWORD"] %>
+    username: <%= ENV["DB_USERNAME"] %>
+    password: <%= ENV["DB_PASSWORD"] %>
   cache:
     <<: *primary_production
     database: school_manager_production_cache

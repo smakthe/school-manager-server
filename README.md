@@ -42,10 +42,6 @@ Rails API for School Manager, a role-based school administration system. The ser
 
 2. Configure environment variables:
 
-   ```bash
-   cp .env .env.local
-   ```
-
    The application reads these variables:
 
    ```env
@@ -53,10 +49,10 @@ Rails API for School Manager, a role-based school administration system. The ser
    DB_PASSWORD=your_mysql_password
    SUPERADMIN_EMAIL=admin@school.com
    SUPERADMIN_PASSWORD=password
-   ELASTICSEARCH_URL=http://elastic:password@localhost:9200
+   ELASTICSEARCH_PASSWORD=password
    ```
 
-   `SUPERADMIN_EMAIL` and `SUPERADMIN_PASSWORD` are used by `db/seeds.rb`. `ELASTICSEARCH_URL` is optional and defaults to the local value configured in `config/initializers/elasticsearch.rb`.
+   `SUPERADMIN_EMAIL` and `SUPERADMIN_PASSWORD` are used by `db/seeds.rb`. `ELASTICSEARCH_PASSWORD` is used to connect to Elasticsearch and can be generated while setting up Elasticsearch locally.
 
 3. Prepare the database:
 
@@ -90,15 +86,15 @@ Omit `--skip-server` if you want the script to start the development server afte
 
 ## Environment Variables
 
-| Variable | Required | Description |
-| --- | --- | --- |
-| `DB_USERNAME` | Yes | MySQL username for development and test databases. |
-| `DB_PASSWORD` | Yes | MySQL password for development and test databases. |
-| `SUPERADMIN_EMAIL` | No | Email for the seeded superadmin account. Defaults to `admin@school.com`. |
-| `SUPERADMIN_PASSWORD` | No | Password for the seeded superadmin account. Defaults to `password`. |
-| `ELASTICSEARCH_URL` | No | Elasticsearch connection URL. Defaults to the local URL in the initializer. |
-| `RAILS_MASTER_KEY` | Production | Rails credentials key used by Docker and production deployments. |
-| `SCHOOL_MANAGER_DATABASE_PASSWORD` | Production | Production database password used by `config/database.yml`. |
+| Variable                           | Required   | Description                                                              |
+| ---------------------------------- | ---------- | ------------------------------------------------------------------------ |
+| `DB_USERNAME`                      | Yes        | MySQL username for development and test databases.                       |
+| `DB_PASSWORD`                      | Yes        | MySQL password for development and test databases.                       |
+| `SUPERADMIN_EMAIL`                 | No         | Email for the seeded superadmin account. Defaults to `admin@school.com`. |
+| `SUPERADMIN_PASSWORD`              | No         | Password for the seeded superadmin account. Defaults to `password`.      |
+| `ELASTICSEARCH_PASSWORD`           | Yes        | Password for Elasticsearch connection. Generated during Elastic setup.   |
+| `RAILS_MASTER_KEY`                 | Production | Rails credentials key used by Docker and production deployments.         |
+| `SCHOOL_MANAGER_DATABASE_PASSWORD` | Production | Production database password used by `config/database.yml`.              |
 
 Do not commit real secret values. Keep local overrides in untracked environment files or your shell profile.
 
