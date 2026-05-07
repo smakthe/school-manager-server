@@ -20,7 +20,7 @@ gem "solid_cache"
 gem "solid_queue"
 gem "solid_cable"
 
-gem "faker", "~> 3.2"
+gem "faker", "~> 3.8"
 gem "parallel", "~> 1.24"
 gem "ruby-progressbar", "~> 1.13"
 
