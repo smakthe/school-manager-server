@@ -36,7 +36,7 @@ gem "thruster", require: false
 # Authentication & API tools
 gem "jwt", "~> 2.7"
 gem "jsonapi-serializer"
-gem "pagy", "~> 8.0"
+gem "pagy", "~> 43.5"
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
 gem "rack-cors"
 
