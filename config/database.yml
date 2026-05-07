@@ -56,10 +56,8 @@ test:
 production:
   primary: &primary_production
     <<: *default
-    # url: <%= ENV["DATABASE_URL"] %>
+    url: <%= ENV["DATABASE_URL"] %>
     database: school_manager_production
-    username: root
-    password: 1234
   cache:
     <<: *primary_production
     database: school_manager_production_cache
