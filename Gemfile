@@ -21,7 +21,7 @@ gem "solid_queue"
 gem "solid_cable"
 
 gem "faker", "~> 3.2"
-gem "parallel", "~> 1.24"
+gem "parallel", "~> 2.1"
 gem "ruby-progressbar", "~> 1.13"
 
 # Reduces boot times through caching; required in config/boot.rb
