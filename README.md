@@ -45,14 +45,11 @@ Rails API for School Manager, a role-based school administration system. The ser
    The application reads these variables:
 
    ```env
-   DB_USERNAME=your_mysql_user
-   DB_PASSWORD=your_mysql_password
    SUPERADMIN_EMAIL=admin@school.com
    SUPERADMIN_PASSWORD=password
-   ELASTICSEARCH_PASSWORD=password
    ```
 
-   `SUPERADMIN_EMAIL` and `SUPERADMIN_PASSWORD` are used by `db/seeds.rb`. `ELASTICSEARCH_PASSWORD` is used to connect to Elasticsearch and can be generated while setting up Elasticsearch locally.
+   `SUPERADMIN_EMAIL` and `SUPERADMIN_PASSWORD` are used by `db/seeds.rb`.
 
 3. Prepare the database:
 
@@ -88,11 +85,8 @@ Omit `--skip-server` if you want the script to start the development server afte
 
 | Variable                           | Required   | Description                                                              |
 | ---------------------------------- | ---------- | ------------------------------------------------------------------------ |
-| `DB_USERNAME`                      | Yes        | MySQL username for development and test databases.                       |
-| `DB_PASSWORD`                      | Yes        | MySQL password for development and test databases.                       |
 | `SUPERADMIN_EMAIL`                 | No         | Email for the seeded superadmin account. Defaults to `admin@school.com`. |
 | `SUPERADMIN_PASSWORD`              | No         | Password for the seeded superadmin account. Defaults to `password`.      |
-| `ELASTICSEARCH_PASSWORD`           | Yes        | Password for Elasticsearch connection. Generated during Elastic setup.   |
 | `RAILS_MASTER_KEY`                 | Production | Rails credentials key used by Docker and production deployments.         |
 | `SCHOOL_MANAGER_DATABASE_PASSWORD` | Production | Production database password used by `config/database.yml`.              |
 

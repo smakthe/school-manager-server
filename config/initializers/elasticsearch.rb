@@ -1,8 +1,5 @@
-# frozen_string_literal: true
-
-require "elasticsearch/model"
-
 Elasticsearch::Model.client = Elasticsearch::Client.new(
-  url: "http://elastic:#{ENV['ELASTICSEARCH_PASSWORD']}@localhost:9200",
-  log: Rails.env.development?
+  url: "http://#{ENV.fetch('ELASTICSEARCH_HOST', '127.0.0.1')}:9200",
+  retry_on_failure: 5,
+  request_timeout: 30
 )

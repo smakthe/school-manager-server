@@ -8,7 +8,7 @@
 # For a containerized dev environment, see Dev Containers: https://guides.rubyonrails.org/getting_started_with_devcontainer.html
 
 # Make sure RUBY_VERSION matches the Ruby version in .ruby-version
-ARG RUBY_VERSION=4.0.1
+ARG RUBY_VERSION=4.0.3
 FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
 
 # Rails app lives here
@@ -36,7 +36,6 @@ RUN apt-get update -qq && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 # Install application gems
-COPY vendor/* ./vendor/
 COPY Gemfile Gemfile.lock ./
 
 RUN bundle install && \
@@ -51,9 +50,6 @@ COPY . .
 # -j 1 disable parallel compilation to avoid a QEMU bug: https://github.com/rails/bootsnap/issues/495
 RUN bundle exec bootsnap precompile -j 1 app/ lib/
 
-
-
-
 # Final stage for app image
 FROM base
 
@@ -65,6 +61,10 @@ USER 1000:1000
 # Copy built artifacts: gems, application
 COPY --chown=rails:rails --from=build "${BUNDLE_PATH}" "${BUNDLE_PATH}"
 COPY --chown=rails:rails --from=build /rails /rails
+
+# Strip the UTF-8 BOM from the entrypoint script if present
+RUN sed -i '1s/^\xEF\xBB\xBF//' /rails/bin/docker-entrypoint
+RUN chmod +x /rails/bin/docker-entrypoint
 
 # Entrypoint prepares the database.
 ENTRYPOINT ["/rails/bin/docker-entrypoint"]

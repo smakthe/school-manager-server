@@ -1,0 +1,44 @@
+services:
+  db:
+    image: mysql:9
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: school_manager_production
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: [
+          "CMD-SHELL",
+          "mysqladmin ping -u root -p${MYSQL_PASSWORD} \
+          && echo 'OK' || exit 1",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    image: smakthe/school-manager:latest
+    restart: unless-stopped
+    ports:
+      - "3001:80"
+    environment:
+      - RAILS_ENV=production
+      - RAILS_MASTER_KEY=${RAILS_MASTER_KEY}
+      - DATABASE_URL=mysql2://root:${MYSQL_PASSWORD}@db:3306/school_manager_production
+      - ELASTICSEARCH_HOST=shared_elasticsearch
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - default
+      - shared_elastic_net
+
+volumes:
+  mysql_data:
+
+networks:
+  shared_elastic_net:
+    external: true

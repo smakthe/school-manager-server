@@ -282,3 +282,36 @@ progressbar = ProgressBar.create(
 end
 
 puts "\nSeeding completed successfully!"
+
+# ─── 10. ELASTICSEARCH BULK IMPORT ──────────────────────────────────────────
+puts "Starting Elasticsearch Bulk Indexing..."
+
+# Define the models that have Elasticsearch included
+searchable_models = [ School, Classroom, Teacher, Student ]
+
+searchable_models.each do |model|
+  total_records = model.count
+  next if total_records.zero?
+
+  puts "\nRebuilding index for #{model.name} (Total: #{total_records})..."
+
+  # force: true drops the existing index if it already exists, ensuring a clean slate
+  model.__elasticsearch__.create_index!(force: true)
+
+  # Create a dedicated progress bar for this model's indexing
+  es_progressbar = ProgressBar.create(
+    title:  "#{model.name} Indexing",
+    total:  total_records,
+    format: '%t: |%B| %p%% %e'
+  )
+
+  # Import in batches to prevent RAM exhaustion.
+  # Without batch_size, Rails will load all ~900,000 students into memory at once and crash.
+  model.import(batch_size: 1000) do |response|
+    # This block yields the response from each batch request.
+    # We increment the progress bar by the number of successful items in the batch.
+    es_progressbar.progress += response['items'].size if response['items']
+  end
+end
+
+puts "Elasticsearch Indices built and populated successfully!"
