@@ -27,13 +27,13 @@ class Student < ApplicationRecord
 
   def as_indexed_json(options = {})
     as_json(
-      only: [:id, :name, :admission_number, :gender, :school_id, :is_active]
+      only: [ :id, :name, :admission_number, :gender, :school_id, :is_active ]
     ).merge(
       school_name: school.name,
       classroom_id: current_classroom&.id,
       classroom_name: current_classroom&.display_name,
       email: user&.email,
-      document_type: 'student'
+      document_type: "student"
     )
   end
 

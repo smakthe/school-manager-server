@@ -33,7 +33,7 @@ class Teacher < ApplicationRecord
 
   def as_indexed_json(options = {})
     as_json(
-      only: [:id, :name, :employee_code, :type, :school_id]
+      only: [ :id, :name, :employee_code, :type, :school_id ]
     ).merge(
       school_name: school.name,
       email: user&.email,

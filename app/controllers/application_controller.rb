@@ -13,13 +13,13 @@ class ApplicationController < ActionController::API
                     params.dig(:page, :number)
                   else
                     params[:page]
-                  end || 1
+    end || 1
 
     # Force the variables into Pagy before it does its own processing
     vars[:page]  ||= page_number
     vars[:items] ||= 20 # For Pagy v5/v6 compatibility
     vars[:limit] ||= 20 # For Pagy v7/v8+ compatibility
-    
+
     super(collection, vars)
   end
   # -------------------------------------
@@ -27,8 +27,8 @@ class ApplicationController < ActionController::API
   private
 
   def authenticate_request
-    header = request.headers['Authorization']
-    token = header.split(' ').last if header
+    header = request.headers["Authorization"]
+    token = header.split(" ").last if header
 
     decoded = JwtService.decode(token)
 
@@ -37,7 +37,7 @@ class ApplicationController < ActionController::API
     end
 
     unless @current_user
-      render json: { error: 'Unauthorized' }, status: :unauthorized
+      render json: { error: "Unauthorized" }, status: :unauthorized
     end
   end
 

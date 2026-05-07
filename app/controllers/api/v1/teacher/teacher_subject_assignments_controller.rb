@@ -11,7 +11,7 @@ class Api::V1::Teacher::TeacherSubjectAssignmentsController < Api::V1::Teacher::
       scope = TeacherSubjectAssignment.includes(:classroom, :subject)
                                       .where(teacher_id: params[:teacher_id])
     else
-      return render json: { error: 'classroom_id or teacher_id parameter is required' }, status: :bad_request
+      return render json: { error: "classroom_id or teacher_id parameter is required" }, status: :bad_request
     end
 
     @pagy, @assignments = pagy(scope)

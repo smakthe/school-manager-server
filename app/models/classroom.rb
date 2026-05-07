@@ -25,7 +25,7 @@ class Classroom < ApplicationRecord
     message: "is already a class teacher for another classroom in this academic year"
   }
   validates :grade, uniqueness: {
-    scope: [:school_id, :academic_year_id, :section],
+    scope: [ :school_id, :academic_year_id, :section ],
     message: "already has a classroom for this section and academic year"
   }
 
@@ -38,12 +38,12 @@ class Classroom < ApplicationRecord
 
   def as_indexed_json(options = {})
     as_json(
-      only: [:id, :grade, :section, :school_id, :academic_year_id]
+      only: [ :id, :grade, :section, :school_id, :academic_year_id ]
     ).merge(
       school_name: school.name,
       display_name: display_name,
       class_teacher_name: class_teacher&.name,
-      document_type: 'classroom'
+      document_type: "classroom"
     )
   end
 

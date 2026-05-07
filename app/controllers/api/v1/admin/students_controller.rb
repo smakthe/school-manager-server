@@ -1,5 +1,5 @@
 class Api::V1::Admin::StudentsController < Api::V1::Admin::BaseController
-  before_action :set_student, only: [:show, :update, :destroy]
+  before_action :set_student, only: [ :show, :update, :destroy ]
 
   def index
     scope = Student.all

@@ -12,47 +12,47 @@ module Api
             multi_match: {
               query: query_string,
               fields: [
-                'name^3',           # Schools, Teachers, Students
-                'display_name^2',   # Classrooms
-                'employee_code^2',  # Teachers
-                'admission_number^2', # Students
-                'school_name',
-                'subdomain',
-                'class_teacher_name',
-                'email'
+                "name^3",           # Schools, Teachers, Students
+                "display_name^2",   # Classrooms
+                "employee_code^2",  # Teachers
+                "admission_number^2", # Students
+                "school_name",
+                "subdomain",
+                "class_teacher_name",
+                "email"
               ],
-              type: 'best_fields',
-              fuzziness: 'AUTO',
-              minimum_should_match: '75%'
+              type: "best_fields",
+              fuzziness: "AUTO",
+              minimum_should_match: "75%"
             }
           }
         ]
 
         filter_clauses = []
-        models_to_search = [::School, ::Classroom, ::Teacher, ::Student]
+        models_to_search = [ ::School, ::Classroom, ::Teacher, ::Student ]
 
         case @current_user.userable_type
-        when 'Principal'
+        when "Principal"
           school_id = @current_user.userable.school_id
           filter_clauses << { term: { school_id: school_id } }
-          models_to_search = [::Classroom, ::Teacher, ::Student]
-        when 'Teacher'
+          models_to_search = [ ::Classroom, ::Teacher, ::Student ]
+        when "Teacher"
           teacher = @current_user.userable
           school_id = teacher.school_id
-          
+
           allowed_classroom_ids = teacher.teacher_subject_assignments.pluck(:classroom_id)
           allowed_classroom_ids << teacher.homeroom&.id if teacher.homeroom
           allowed_classroom_ids.compact!.uniq!
 
           filter_clauses << { term: { school_id: school_id } }
-          
+
           filter_clauses << {
             bool: {
               should: [
                 {
                   bool: {
                     must: [
-                      { term: { 'document_type.keyword': 'classroom' } },
+                      { term: { 'document_type.keyword': "classroom" } },
                       { terms: { _id: allowed_classroom_ids.map(&:to_s) } }
                     ]
                   }
@@ -60,7 +60,7 @@ module Api
                 {
                   bool: {
                     must: [
-                      { term: { 'document_type.keyword': 'student' } },
+                      { term: { 'document_type.keyword': "student" } },
                       { terms: { classroom_id: allowed_classroom_ids } }
                     ]
                   }
@@ -69,8 +69,8 @@ module Api
               minimum_should_match: 1
             }
           }
-          
-          models_to_search = [::Classroom, ::Student]
+
+          models_to_search = [ ::Classroom, ::Student ]
         end
 
         search_definition = {
@@ -87,17 +87,17 @@ module Api
 
         serialized_data = records.map do |record|
           hash = case record
-                 when ::School
+          when ::School
                    SchoolSerializer.new(record).serializable_hash[:data]
-                 when ::Classroom
+          when ::Classroom
                    ClassroomSerializer.new(record).serializable_hash[:data]
-                 when ::Teacher
+          when ::Teacher
                    TeacherSerializer.new(record).serializable_hash[:data]
-                 when ::Student
+          when ::Student
                    StudentSerializer.new(record).serializable_hash[:data]
-                 else
+          else
                    nil
-                 end
+          end
           hash
         end.compact
 

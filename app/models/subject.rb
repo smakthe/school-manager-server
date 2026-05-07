@@ -7,6 +7,6 @@ class Subject < ApplicationRecord
   has_many :marks, dependent: :destroy
 
   validates :name, presence: true
-  validates :code, presence: true, uniqueness: { scope: [:school_id, :grade] }
+  validates :code, presence: true, uniqueness: { scope: [ :school_id, :grade ] }
   validates :grade, presence: true, inclusion: { in: 1..10 }
 end

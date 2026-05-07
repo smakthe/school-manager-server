@@ -8,7 +8,7 @@ class Mark < ApplicationRecord
   validates :score, presence: true, numericality: { greater_than_or_equal_to: 0 }
   validates :max_score, presence: true, numericality: { greater_than: 0 }
   validates :subject_id, uniqueness: {
-    scope: [:enrollment_id, :term],
+    scope: [ :enrollment_id, :term ],
     message: "already has a mark recorded for this term and enrollment"
   }
   validate :score_cannot_exceed_max_score

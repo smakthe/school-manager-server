@@ -1,5 +1,5 @@
 class Api::V1::Teacher::StudentsController < Api::V1::Teacher::BaseController
-  before_action :set_student, only: [:show, :update]
+  before_action :set_student, only: [ :show, :update ]
 
   def index
     scope = current_school.students
@@ -16,7 +16,7 @@ class Api::V1::Teacher::StudentsController < Api::V1::Teacher::BaseController
 
   def update
     unless current_userable.homeroom_students.exists?(id: @student.id)
-      return render json: { error: 'Forbidden: You can only update students within your homeroom class.' }, status: :forbidden
+      return render json: { error: "Forbidden: You can only update students within your homeroom class." }, status: :forbidden
     end
 
     if @student.update(student_params)

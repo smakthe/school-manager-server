@@ -1,3 +1,2 @@
 class Principal < Teacher
-
 end

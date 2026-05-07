@@ -1,5 +1,5 @@
 class Api::V1::Principal::TeachersController < Api::V1::Principal::BaseController
-  before_action :set_teacher, only: [:show, :update, :destroy]
+  before_action :set_teacher, only: [ :show, :update, :destroy ]
 
   def index
     @pagy, @teachers = pagy(current_school.teachers)
@@ -12,7 +12,7 @@ class Api::V1::Principal::TeachersController < Api::V1::Principal::BaseControlle
 
   def create
     @teacher = current_school.teachers.build(teacher_params)
-    
+
     if params.dig(:teacher, :user, :email).present? && params.dig(:teacher, :user, :password).present?
       @teacher.build_user(
         email: params[:teacher][:user][:email],

@@ -1,12 +1,12 @@
 class Api::V1::Admin::SchoolsController < Api::V1::Admin::BaseController
-  before_action :set_school, only: [:show, :update, :destroy]
+  before_action :set_school, only: [ :show, :update, :destroy ]
 
   def index
     scope = School.all
     if params[:board].present?
-      requested_boards = params[:board].split(',')
+      requested_boards = params[:board].split(",")
       valid_boards = requested_boards.select { |b| School.boards.keys.include?(b) }
-      
+
       if valid_boards.any?
         scope = scope.where(board: valid_boards)
       else

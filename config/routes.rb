@@ -7,8 +7,8 @@ Rails.application.routes.draw do
 
   namespace :api, defaults: { format: :json } do
     namespace :v1 do
-      post 'login', to: 'authentications#create'
-      get 'search', to: 'search#index'
+      post "login", to: "authentications#create"
+      get "search", to: "search#index"
 
       namespace :admin do
         resources :schools do
@@ -20,26 +20,26 @@ Rails.application.routes.draw do
         resources :students
         resources :classrooms
         resources :academic_years
-        resources :teacher_subject_assignments, only: [:index, :create, :destroy]
-        resources :marks, only: [:index]
-        get 'dashboard_stats', to: 'dashboard#stats'
+        resources :teacher_subject_assignments, only: [ :index, :create, :destroy ]
+        resources :marks, only: [ :index ]
+        get "dashboard_stats", to: "dashboard#stats"
       end
 
       namespace :principal do
         resources :teachers
         resources :students
         resources :classrooms
-        resources :marks, only: [:index]
-        resources :teacher_subject_assignments, only: [:index]
-        get 'dashboard_stats', to: 'dashboard#stats'
+        resources :marks, only: [ :index ]
+        resources :teacher_subject_assignments, only: [ :index ]
+        get "dashboard_stats", to: "dashboard#stats"
       end
 
       namespace :teacher do
-        resources :classrooms, only: [:index, :show]
-        resources :students, only: [:index, :show, :update]
-        resources :marks, only: [:index, :create, :update]
-        resources :teacher_subject_assignments, only: [:index]
-        get 'dashboard_stats', to: 'dashboard#stats'
+        resources :classrooms, only: [ :index, :show ]
+        resources :students, only: [ :index, :show, :update ]
+        resources :marks, only: [ :index, :create, :update ]
+        resources :teacher_subject_assignments, only: [ :index ]
+        get "dashboard_stats", to: "dashboard#stats"
       end
     end
   end

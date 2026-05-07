@@ -5,7 +5,7 @@ class TeacherSubjectAssignment < ApplicationRecord
   belongs_to :academic_year
 
   validates :subject_id, uniqueness: {
-    scope: [:classroom_id, :academic_year_id],
+    scope: [ :classroom_id, :academic_year_id ],
     message: "already has a teacher assigned for this classroom and year"
   }
 

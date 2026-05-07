@@ -1,5 +1,5 @@
 class Api::V1::Teacher::ClassroomsController < Api::V1::Teacher::BaseController
-  before_action :set_classroom, only: [:show]
+  before_action :set_classroom, only: [ :show ]
 
   def index
     @pagy, @classrooms = pagy(current_school.classrooms)

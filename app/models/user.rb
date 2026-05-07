@@ -11,11 +11,11 @@ class User < ApplicationRecord
   def email_domain_must_match_role
     return if email.blank? || userable.nil?
 
-    if userable_type == 'Admin'
-      unless email == ENV['SUPERADMIN_EMAIL']
-        errors.add(:email, 'must be the authorized superadmin email')
+    if userable_type == "Admin"
+      unless email == ENV["SUPERADMIN_EMAIL"]
+        errors.add(:email, "must be the authorized superadmin email")
       end
-    elsif userable_type == 'Teacher' || userable_type == 'Principal'
+    elsif userable_type == "Teacher" || userable_type == "Principal"
       expected_domain = "#{userable.school.subdomain}.co.edu"
       unless email.ends_with?("@#{expected_domain}")
         errors.add(:email, "must be a valid school domain (@#{expected_domain})")

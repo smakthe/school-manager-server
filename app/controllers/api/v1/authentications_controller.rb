@@ -1,5 +1,5 @@
 class Api::V1::AuthenticationsController < ApplicationController
-  skip_before_action :authenticate_request, only: [:create], raise: false
+  skip_before_action :authenticate_request, only: [ :create ], raise: false
 
   def create
     user = User.find_by(email: params[:email])
@@ -19,7 +19,7 @@ class Api::V1::AuthenticationsController < ApplicationController
         }
       }, status: :ok
     else
-      render json: { error: 'Invalid email or password' }, status: :unauthorized
+      render json: { error: "Invalid email or password" }, status: :unauthorized
     end
   end
 end

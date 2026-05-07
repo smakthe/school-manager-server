@@ -1,10 +1,10 @@
 class Api::V1::Admin::TeachersController < Api::V1::Admin::BaseController
-  before_action :set_teacher, only: [:show, :update, :destroy]
+  before_action :set_teacher, only: [ :show, :update, :destroy ]
 
   def index
     scope = Teacher.all
     scope = scope.where(school_id: params[:school_id]) if params[:school_id].present?
-    
+
     @pagy, @teachers = pagy(scope)
     render_jsonapi(TeacherSerializer, @teachers, pagy: @pagy)
   end
@@ -15,7 +15,7 @@ class Api::V1::Admin::TeachersController < Api::V1::Admin::BaseController
 
   def create
     @teacher = Teacher.new(teacher_params)
-    
+
     # Bind the login credentials automatically using nested payload
     if params.dig(:teacher, :user, :email).present? && params.dig(:teacher, :user, :password).present?
       @teacher.build_user(

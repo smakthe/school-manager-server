@@ -1,5 +1,5 @@
 class Api::V1::Admin::AcademicYearsController < Api::V1::Admin::BaseController
-  before_action :set_academic_year, only: [:show, :update, :destroy]
+  before_action :set_academic_year, only: [ :show, :update, :destroy ]
 
   def index
     @pagy, @academic_years = pagy(AcademicYear.all)

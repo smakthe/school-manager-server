@@ -7,7 +7,7 @@ require 'set'
 ActiveRecord::Base.logger = nil
 
 puts "Cleaning Database..."
-[User, Mark, Enrollment, TeacherSubjectAssignment, Classroom, Subject, Student, Teacher, AcademicYear, School, Admin].each(&:delete_all)
+[ User, Mark, Enrollment, TeacherSubjectAssignment, Classroom, Subject, Student, Teacher, AcademicYear, School, Admin ].each(&:delete_all)
 
 puts "Creating Superadmin..."
 Admin.create!
@@ -22,29 +22,29 @@ hashed_password = BCrypt::Password.create('1234', cost: 4).to_s
 
 TOTAL_SCHOOLS = 1000
 CLASS_GRADES  = (1..10).to_a
-SECTIONS      = [0, 1, 2]   # 0=A, 1=B, 2=C
-TERMS         = [0, 1, 2]   # confirm matches your Term enum
+SECTIONS      = [ 0, 1, 2 ]   # 0=A, 1=B, 2=C
+TERMS         = [ 0, 1, 2 ]   # confirm matches your Term enum
 MAX_SCORE     = 100.0
 
 SUBJECTS_LIST = [
-  { code: 'MAT', name: 'Mathematics' },       
+  { code: 'MAT', name: 'Mathematics' },
   { code: 'ENG', name: 'English' },
-  { code: 'HIN', name: 'Hindi' },             
+  { code: 'HIN', name: 'Hindi' },
   { code: 'SST', name: 'Social Studies' },
-  { code: 'SAN', name: 'Sanskrit' },          
+  { code: 'SAN', name: 'Sanskrit' },
   { code: 'COM', name: 'Commerce' },
-  { code: 'ECO', name: 'Economics' },         
+  { code: 'ECO', name: 'Economics' },
   { code: 'BST', name: 'Business Studies' },
-  { code: 'ACC', name: 'Accountancy' },       
+  { code: 'ACC', name: 'Accountancy' },
   { code: 'HIS', name: 'History' },
-  { code: 'GEO', name: 'Geography' },         
+  { code: 'GEO', name: 'Geography' },
   { code: 'PHY', name: 'Physics' },
-  { code: 'CHE', name: 'Chemistry' },         
+  { code: 'CHE', name: 'Chemistry' },
   { code: 'BIO', name: 'Biology' },
-  { code: 'BOT', name: 'Botany' },            
+  { code: 'BOT', name: 'Botany' },
   { code: 'ZOO', name: 'Zoology' },
   { code: 'CMP', name: 'Computer Science' },
-  { code: 'POL', name: 'Political Science' }, 
+  { code: 'POL', name: 'Political Science' },
   { code: 'PSY', name: 'Psychology' },
   { code: 'EVS', name: 'Environmental Science' }
 ].freeze
@@ -54,25 +54,25 @@ SUBJECTS_LIST = [
 def generate_unique_school
   name = subdomain = ""
   attempts = 0
-  
+
   loop do
     pattern = rand(1..12)
     name = case pattern
-           when 1 then "#{Faker::Address.city} #{%w[International Global Royal Modern].sample} Academy"
-           when 2 then "#{Faker::Name.last_name} #{%w[Memorial Heritage Pioneer].sample} Institute"
-           when 3 then "#{Faker::Space.star} #{%w[Valley Summit Horizon Heights].sample} School"
-           when 4 then "The #{Faker::Address.state} School of Excellence"
-           when 5 then "#{Faker::Address.city} #{%w[Public Private Central State].sample} School"
-           when 6 then "#{Faker::Educator.campus} #{%w[High Prep Grammar Secondary].sample} School"
-           when 7 then "#{Faker::Name.last_name} #{%w[Montessori Endowed Technical Foundation].sample} Academy"
-           when 8 then "#{Faker::Address.community} #{%w[Collegiate Charter Magnet Arts].sample} Institute"
-           when 9 then "#{Faker::University.name}"
-           when 10 then "#{%w[St. Saint Mount Fort].sample} #{Faker::Name.first_name} #{%w[College High Academy].sample}"
-           when 11 then "#{Faker::Address.city} #{%w[Day Boarding Trade].sample} School"
-           when 12 then "#{%w[Little Bright Future Rising].sample} #{%w[Stars Minds Scholars Leaders].sample} #{%w[Academy School Institute].sample}"
-           end
+    when 1 then "#{Faker::Address.city} #{%w[International Global Royal Modern].sample} Academy"
+    when 2 then "#{Faker::Name.last_name} #{%w[Memorial Heritage Pioneer].sample} Institute"
+    when 3 then "#{Faker::Space.star} #{%w[Valley Summit Horizon Heights].sample} School"
+    when 4 then "The #{Faker::Address.state} School of Excellence"
+    when 5 then "#{Faker::Address.city} #{%w[Public Private Central State].sample} School"
+    when 6 then "#{Faker::Educator.campus} #{%w[High Prep Grammar Secondary].sample} School"
+    when 7 then "#{Faker::Name.last_name} #{%w[Montessori Endowed Technical Foundation].sample} Academy"
+    when 8 then "#{Faker::Address.community} #{%w[Collegiate Charter Magnet Arts].sample} Institute"
+    when 9 then "#{Faker::University.name}"
+    when 10 then "#{%w[St. Saint Mount Fort].sample} #{Faker::Name.first_name} #{%w[College High Academy].sample}"
+    when 11 then "#{Faker::Address.city} #{%w[Day Boarding Trade].sample} School"
+    when 12 then "#{%w[Little Bright Future Rising].sample} #{%w[Stars Minds Scholars Leaders].sample} #{%w[Academy School Institute].sample}"
+    end
 
-    # Increased from 15 to 35 characters. This prevents subdomain collisions 
+    # Increased from 15 to 35 characters. This prevents subdomain collisions
     # for cities with long names while keeping URLs clean.
     subdomain = name.parameterize.gsub('-', '')[0..35]
 
@@ -80,11 +80,11 @@ def generate_unique_school
       @used_subdomains.add(subdomain)
       break
     end
-    
+
     attempts += 1
   end
-  
-  [name, subdomain]
+
+  [ name, subdomain ]
 end
 
 puts "Starting Strict Sequential Bulk Insert. No threads, no deadlocks."
@@ -100,7 +100,7 @@ progressbar = ProgressBar.create(
 
   # ─── 1. SCHOOL & ACADEMIC YEAR ────────────────────────────────────────────
   school_name, subdomain = generate_unique_school
-  
+
   school = School.create!(
     name:                school_name,
     subdomain:           subdomain,
@@ -149,15 +149,15 @@ progressbar = ProgressBar.create(
   extra_teachers = all_teachers.select { |t| t.employee_code.start_with?("TCH-#{school.id}-E") }
 
   # ─── 4. USERS ─────────────────────────────────────────────────────────────
-  users_batch = [{
+  users_batch = [ {
     userable_type:   'Principal',
     userable_id:     principal.id,
     email:           "principal@#{domain}",
     password_digest: hashed_password,
     created_at:      now,
     updated_at:      now
-  }]
-  
+  } ]
+
   all_teachers.each do |t|
     users_batch << {
       userable_type:   'Teacher',

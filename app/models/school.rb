@@ -24,14 +24,14 @@ class School < ApplicationRecord
   }
 
   def full_address
-    [address_line_1, address_line_2, city, state, zip_code].compact_blank.join(", ")
+    [ address_line_1, address_line_2, city, state, zip_code ].compact_blank.join(", ")
   end
 
   def as_indexed_json(options = {})
     as_json(
-      only: [:id, :name, :subdomain, :board, :principal_name, :city, :state, :phone, :email]
+      only: [ :id, :name, :subdomain, :board, :principal_name, :city, :state, :phone, :email ]
     ).merge(
-      document_type: 'school'
+      document_type: "school"
     )
   end
 

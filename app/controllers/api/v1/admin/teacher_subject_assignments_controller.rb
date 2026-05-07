@@ -1,5 +1,5 @@
 class Api::V1::Admin::TeacherSubjectAssignmentsController < Api::V1::Admin::BaseController
-  before_action :set_assignment, only: [:destroy]
+  before_action :set_assignment, only: [ :destroy ]
 
   def index
     if params[:classroom_id].present?
@@ -7,16 +7,16 @@ class Api::V1::Admin::TeacherSubjectAssignmentsController < Api::V1::Admin::Base
     elsif params[:teacher_id].present?
       scope = TeacherSubjectAssignment.includes(:classroom, :subject).where(teacher_id: params[:teacher_id])
     else
-      return render json: { error: 'classroom_id or teacher_id parameter is required' }, status: :bad_request
+      return render json: { error: "classroom_id or teacher_id parameter is required" }, status: :bad_request
     end
-    
+
     @pagy, @assignments = pagy(scope)
     render_jsonapi(TeacherSubjectAssignmentSerializer, @assignments, pagy: @pagy)
   end
 
   def create
     @assignment = TeacherSubjectAssignment.new(assignment_params)
-    
+
     @assignment.academic_year_id ||= @assignment.classroom&.academic_year_id
 
     if @assignment.save
