@@ -1,6 +1,6 @@
 # School Manager API
 
-Rails API for School Manager, a role-based school administration system. The server owns authentication, school data, user roles, dashboards, search, and CRUD APIs consumed by the React client in `../client`.
+Rails API for School Manager, a role-based school administration system. The server owns authentication, school data, user roles, dashboards, search, and CRUD APIs consumed by the frontend client.
 
 ## Features
 
@@ -83,12 +83,12 @@ Omit `--skip-server` if you want the script to start the development server afte
 
 ## Environment Variables
 
-| Variable                           | Required   | Description                                                              |
-| ---------------------------------- | ---------- | ------------------------------------------------------------------------ |
-| `SUPERADMIN_EMAIL`                 | No         | Email for the seeded superadmin account. Defaults to `admin@school.com`. |
-| `SUPERADMIN_PASSWORD`              | No         | Password for the seeded superadmin account. Defaults to `password`.      |
-| `RAILS_MASTER_KEY`                 | Production | Rails credentials key used by Docker and production deployments.         |
-| `SCHOOL_MANAGER_DATABASE_PASSWORD` | Production | Production database password used by `config/database.yml`.              |
+| Variable              | Required   | Description                                                              |
+| --------------------- | ---------- | ------------------------------------------------------------------------ |
+| `SUPERADMIN_EMAIL`    | No         | Email for the seeded superadmin account. Defaults to `admin@school.com`. |
+| `SUPERADMIN_PASSWORD` | No         | Password for the seeded superadmin account. Defaults to `password`.      |
+| `RAILS_MASTER_KEY`    | Production | Rails credentials key used by Docker and production deployments.         |
+| `MYSQL_PASSWORD`      | Production | Production database password used by `config/database.yml`.              |
 
 Do not commit real secret values. Keep local overrides in untracked environment files or your shell profile.
 
@@ -190,7 +190,7 @@ The included `Dockerfile` is intended for production-style builds.
 docker build -t school_manager .
 docker run -p 80:80 \
   -e RAILS_MASTER_KEY=<rails-master-key> \
-  -e SCHOOL_MANAGER_DATABASE_PASSWORD=<database-password> \
+  -e MYSQL_PASSWORD=<database-password> \
   school_manager
 ```
 
@@ -198,7 +198,7 @@ Use local Rails commands for day-to-day development unless you intentionally wan
 
 ## Client Integration
 
-The React client expects this API at:
+The frontend client expects this API at:
 
 ```env
 VITE_API_BASE_URL=http://localhost:3000/api/v1
