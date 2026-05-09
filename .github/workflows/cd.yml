@@ -9,7 +9,7 @@ on:
 jobs:
   build-and-push:
     if: github.event.workflow_run.conclusion == 'success'
-    runs-on: ubuntu-24.04-arm  # Native ARM64 runner — eliminates QEMU cross-compilation
+    runs-on: ubuntu-24.04-arm
 
     steps:
       - name: Checkout code
